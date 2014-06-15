@@ -1,14 +1,14 @@
-zorro
+Zorro
 =====
+
+Quick and simple JDBC wrapper for quick and simple MySQL manipulation in java
+
 
 Dependency
 ============
 JDBC connector library
 Download avalible at: http://dev.mysql.com/downloads/connector/j/#downloads
 
-
-
-Quick and simple JDBC wrapper for quick and simple MySQL manipulation in java
 
 
 Example usage:
