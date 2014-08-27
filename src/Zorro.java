@@ -1,6 +1,5 @@
-
-
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,22 +23,30 @@ public class Zorro {
 		printResult();
 		close();
 	}
-	public void connect() throws Exception {
-		connect(config.getProperty("dbhost"), config.getProperty("dbname"), config.getProperty("dbuser"), config.getProperty("dbpass"));
+	public Zorro(String sql, Object[] params) throws Exception {
+		config=Config.getConfig();
+		connect();
+		System.out.println(update(sql, params));
+		close();
 	}
-	public void connect(String dbHost, String dbName, String dbUser, String dbPass) throws Exception{
+	public Zorro connect() throws Exception {
+		connect(config.getProperty("dbhost"), config.getProperty("dbname"), config.getProperty("dbuser"), config.getProperty("dbpass"));
+		return this;
+	}
+	public Zorro connect(String dbHost, String dbName, String dbUser, String dbPass) throws Exception{
 		if(db!=null){
 			db.close();
 		}
 		Class.forName("com.mysql.jdbc.Driver");
 		db = DriverManager.getConnection("jdbc:mysql://" + dbHost + "/"+ dbName, dbUser, dbPass);
+		return this;
 	}
 	public ResultSet exe(String sql) throws Exception{
 		return exe(sql, new Object[] {});	 
 	}
 	public ResultSet exe(String sql, Object[] params) throws Exception{
 		closeStmt();
-		currentStatement = prepare(currentStatement, sql, params);
+		currentStatement = prepare(sql, params);
 		currentStatement.executeQuery();
 		currentResultSet=currentStatement.getResultSet();
 		return currentResultSet;
@@ -49,11 +56,11 @@ public class Zorro {
 	}
 	public int update(String sql, Object[] params) throws Exception{
 		closeStmt();
-		currentStatement = prepare(currentStatement, sql, params);
+		currentStatement = prepare(sql, params);
 		return currentStatement.executeUpdate();
 	}
-	private PreparedStatement prepare(PreparedStatement stmt, String sql,Object[] params) throws Exception{
-		stmt = db.prepareStatement(sql);
+	private PreparedStatement prepare(String sql,Object[] params) throws Exception{
+		PreparedStatement stmt = db.prepareStatement(sql);
 		for(int i=0;i<params.length;i++){
 			int paramIndex=i+1;
 			if(params[i] instanceof String){
@@ -62,6 +69,10 @@ public class Zorro {
 				stmt.setInt(paramIndex, ((Integer)params[i]));
 			}else if(params[i] instanceof Double){
 				stmt.setDouble(paramIndex, ((Double)params[i]));
+			}else if(params[i] instanceof Date){
+				stmt.setDate(paramIndex, (Date) params[i]);
+			}else if(params[i]==null){
+				stmt.setObject(paramIndex, null);
 			}else{
 				throw new Exception("Unknown parameter");
 			}
@@ -102,9 +113,11 @@ public class Zorro {
 				}
 				sb.append("===========================================================\r\n");
 				sb.append(rows+" rows in set");
+			
+				currentResultSet.first();
 			} catch (SQLException e) {
 				e.printStackTrace();
-			}
+			}	
 		}else{
 			sb.append("no result");
 		}
